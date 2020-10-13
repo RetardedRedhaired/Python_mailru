@@ -1,6 +1,6 @@
 import unittest
 import random
-from string import printable
+import string
 import tic_tac
 
 
@@ -27,8 +27,8 @@ class TicTacTest(unittest.TestCase):
 		print(type(tmp))
 		for _ in range(random.randint(1, 10)):
 			tmp = tmp + random.choice(string.printable)
-		assertRaises(ValueError, tic_tac.TicTacGame()._validate_input(tmp))
-		assertTrue(tic_tac.TicTacGame()._validate_input(random.randint(1, 100))
+		self.assertRaises(ValueError, tic_tac.TicTacGame()._validate_input(tmp))
+		self.assertTrue(tic_tac.TicTacGame()._validate_input(random.randint(1, 100)))
 
 
 if __name__ == '__main__':
