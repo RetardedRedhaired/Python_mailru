@@ -24,7 +24,6 @@ class TicTacTest(unittest.TestCase):
 	
 	def test_validate_input(self):
 		tmp = ''
-		print(type(tmp))
 		for _ in range(random.randint(1, 10)):
 			tmp = tmp + random.choice(string.printable)
 		self.assertRaises(ValueError, tic_tac.TicTacGame()._validate_input(tmp))
