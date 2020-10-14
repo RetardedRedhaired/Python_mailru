@@ -31,31 +31,43 @@ class TicTacGame():
 
     def _validate_input_opt(self, inp) -> int:
         """
-        Проверяем, что значения, введенные пользователем являются целыми
+        Валидация инпута в UI
         """
         try:
             number = int(inp)
         except ValueError:
             print("You entered not an integer number", )
         else:
-            if number > 0 and number <= 3:
+            try:
+                if not (number > 0 and number <= 3):
+                    raise ValueError("Your number is not in [1, 9]")
+            except ValueError as err:
+                print(err)
+            else:
                 return number
-            print("Your number should be 1, 2 or 3")
-            
+
     def _validate_input_sqr(self, game, inp) -> int:
         """
-        Проверяем, что значения, введенные пользователем являются целыми
+        Валидация инпута в игре
         """
         try:
             number = int(inp)
         except ValueError:
             print("You entered not an integer number", )
         else:
-            if number > 0 and number <= 9:
-                if game[number-1] is None:
+            try:
+                if not (number > 0 and number <= 9):
+                    raise ValueError("Your number is not in [1, 9]")
+            except ValueError as err:
+                print(err)
+            else:
+                try:
+                    if game[number-1] is not None:
+                        raise ValueError("This sqruare is occupied, choose another one")
+                except ValueError as err:
+                    print(err)
+                else:
                     return number
-                print("This sqruare is occupied, choose another one")
-            print("Your number is not in [1, 9]")
 
     def _game_against_player(self):
         """
