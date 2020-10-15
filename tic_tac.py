@@ -40,7 +40,7 @@ class TicTacGame():
         else:
             try:
                 if not (number > 0 and number <= 3):
-                    raise ValueError("Your number is not in [1, 9]")
+                    raise ValueError("Your number should be 1, 2 or 3")
             except ValueError as err:
                 print(err)
             else:
