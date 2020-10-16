@@ -37,14 +37,20 @@ class LRUCache:
             self.delete(most_old[0])
         for tmp in self.cache.keys():
             self.cache[tmp][1] += -1
+        if key not in self.cache.keys():
+            self.counter += 1
         self.cache[key] = [value, 0]
-        self.counter += 1
 
     def delete(self, key: str) -> None:
         """
         поп)))0)
         """
-        self.cache.pop(key)
+        try:
+            self.cache.pop(key)
+        except KeyError:
+            print('There are no such key')
+        else:
+            self.counter -= 1
 
     @staticmethod
     def _validate_input_choice(inp) -> int:
