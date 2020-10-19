@@ -1,9 +1,17 @@
 class MyList(list):
     def __init__(self, lst):
+        """
+        Сразу считаю вес списка, чтобы не считать его каждый раз при сравнении.
+        """
         super().__init__(lst)
         self.sum = self._sum()
 
     def add(self, other):
+        """
+        Метод складывает два списка.
+        Итерируясь по индексам списков, кладу сумму значений в новый список.
+        Когда доходим до конца меньшего, кладется значение из большего списка.
+        """
         len_max = max(len(self), len(other))
         result = [0 for _ in range(len_max)]
         for i in range(len_max):
@@ -16,10 +24,12 @@ class MyList(list):
                     result[i] = other[i]
         return result
 
-    def sub(self,other):
+    def sub(self, other):
+        """Метод вычитает два списка."""
         return self.add(list(map(lambda x: -x, other)))
 
     def _sum(self):
+        """Метод для подсчета суммы списка для дальнейшего сравнения"""
         weight = 0
         for tmp in self:
             weight += tmp
