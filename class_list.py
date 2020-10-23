@@ -1,11 +1,4 @@
 class MyList(list):
-    def __init__(self, lst):
-        """
-        Сразу считаю вес списка, чтобы не считать его каждый раз при сравнении.
-        """
-        super().__init__(lst)
-        self.sum = self._sum()
-
     def add(self, other):
         """
         Метод складывает два списка.
@@ -13,7 +6,7 @@ class MyList(list):
         Когда доходим до конца меньшего, кладется значение из большего списка.
         """
         len_max = max(len(self), len(other))
-        result = [0 for _ in range(len_max)]
+        result = MyList([0 for _ in range(len_max)])
         for i in range(len_max):
             try:
                 result[i] = self[i] + other[i]
@@ -28,30 +21,24 @@ class MyList(list):
         """Метод вычитает два списка."""
         return self.add(list(map(lambda x: -x, other)))
 
-    def _sum(self):
-        """Метод для подсчета суммы списка для дальнейшего сравнения"""
-        weight = 0
-        for tmp in self:
-            weight += tmp
-        return weight
 
     def __lt__(self, other):
-        return self.sum < other.sum
+        return sum(self) < sum(other)
 
     def __le__(self, other):
-        return self.sum <= other.sum
+        return sum(self) <= sum(other)
 
     def __eq__(self, other):
-        return self.sum == other.sum
+        return sum(self) == sum(other)
 
     def __ne__(self, other):
-        return self.sum != other.sum
+        return sum(self) != sum(other)
 
     def __gt__(self, other):
-        return self.sum > other.sum
+        return sum(self) > sum(other)
 
     def __ge__(self, other):
-        return self.sum >= other.sum
+        return sum(self) >= sum(other)
 
 
 if __name__ == '__main__':
@@ -61,4 +48,4 @@ if __name__ == '__main__':
     print(first, second)
     print(first.add(second))
     print(first.sub(second))
-    print(first <= second)
+    print(first != second)
