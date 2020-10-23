@@ -98,4 +98,14 @@ class LRUCache:
 
 if __name__ == '__main__':
     lru_cache = LRUCache(4)
-    lru_cache.user_interface()
+    print(lru_cache.get('kek')[0])
+    lru_cache.set('kek', 'lul')
+    print(lru_cache.get('kek')[0])
+    lru_cache.set('1', '1')
+    lru_cache.set('2', '2')
+    lru_cache.set('3', '3')
+    print(lru_cache.get('kek')[0])
+    lru_cache.set('4', '4')
+    print(lru_cache.get('1')[0])
+    lru_cache.delete('kek')
+    print(lru_cache.get('kek')[0])
