@@ -109,3 +109,4 @@ if __name__ == '__main__':
     print(lru_cache.get('1')[0])
     lru_cache.delete('kek')
     print(lru_cache.get('kek')[0])
+    lru_cache.delete('kek')

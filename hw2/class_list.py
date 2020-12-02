@@ -1,5 +1,5 @@
 class MyList(list):
-    def add(self, other):
+    def __add__(self, other):
         """
         Метод складывает два списка.
         Итерируясь по индексам списков, кладу сумму значений в новый список.
@@ -17,9 +17,9 @@ class MyList(list):
                     result[i] = other[i]
         return result
 
-    def sub(self, other):
+    def __sub__(self, other):
         """Метод вычитает два списка."""
-        return self.add(list(map(lambda x: -x, other)))
+        return self + (list(map(lambda x: -x, other)))
 
 
     def __lt__(self, other):
@@ -46,6 +46,6 @@ if __name__ == '__main__':
     second = MyList([4, 5, 6, 5, 5])
     print(len(first), len(second))
     print(first, second)
-    print(first.add(second))
-    print(first.sub(second))
+    print(first + second)
+    print(first - second)
     print(first != second)
