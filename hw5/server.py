@@ -8,6 +8,7 @@ import configparser
 import time
 import argparse
 import logging
+from dicttoxml import dicttoxml
 
 
 class Config():
@@ -55,15 +56,35 @@ def create_connection(config):
         return sock
 
 
+def params_parsing(conn):
+    tmp = conn.recv(1024).decode('utf-8')
+    s = '?'
+    req = tmp.split('&')
+    for param in req:
+        if param == 'format=xml':
+            req.remove(param)
+            return (False, s.join(req))
+        elif param == 'format=json':
+            req.remove(param)
+            return(True, s.join(req))
+
+
 def listen_mod(sock, config):
     while True:
         sock.listen(config.max_conn)
         conn, addr = sock.accept()
         start_time = time.time()
         print(f'connected: {addr}, port: {config.port}')
-        params = conn.recv(1024).decode('utf-8')
-        response = req(params, config)
-        conn.sendall(response[0].encode('utf-8'))
+        params = params_parsing(conn)
+        try:
+            response = req(params, config)
+        except TypeError:
+            error_log(config, 'Parameters not found')
+            continue
+        try:
+            conn.sendall(response[0].encode('utf-8'))
+        except AttributeError:
+            conn.sendall(response[0])
         log(config, start_time, time.time(), response[1].get('Content-Length'))
     conn.close()
 
@@ -72,14 +93,17 @@ def req(params, config):
     url = 'https://the-one-api.dev/v2/'
     headers = {'Authorization': config.auth_key}
     timeout = config.timeout
-    response = requests.get(url+params, headers=headers, timeout=timeout)
+    response = requests.get(url+params[1], headers=headers, timeout=timeout)
     try:
         answer = response.json()
     except ValueError:
         error_log(config, response.status_code)
         return (str(response.status_code), response.headers)
     else:
-        return (dumps(answer, sort_keys=True, indent=4), response.headers)
+        if params[0] == True:
+            return (dumps(answer, sort_keys=True, indent=4), response.headers)
+        else:
+            return (dicttoxml(answer, attr_type=False), response.headers)
 
 
 if __name__ == '__main__':
