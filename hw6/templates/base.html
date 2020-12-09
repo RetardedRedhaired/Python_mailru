@@ -1,0 +1,12 @@
+<html>
+    <head/>
+    <body>
+        <h1>{{ title }} </h1>
+        {% for creature in creatures %}
+            <div>
+                <h2>{{ creature.name }} - {{ creature.level }}</h2>
+                <p>{{ creature.descr }}</p>
+            </div>
+        {% endfor %}
+    </body>
+</html>
