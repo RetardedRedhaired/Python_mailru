@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from sys import argv
 import socket
 import requests
 from json import dumps
@@ -52,6 +51,7 @@ def create_connection(config):
         sock.bind(addr)
     except OSError:
         error_log(config, 'This port is already in use')
+        sys.exit(1)
     else:
         return sock
 

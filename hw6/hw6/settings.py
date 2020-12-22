@@ -27,6 +27,25 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_URL = 'logout'
+LOGOUT_REDIRECT_URL = 'login'
+
+SOCIAL_AUTH_FACEBOOK_KEY = '1450711208450924' # App ID
+SOCIAL_AUTH_FACEBOOK_SECRET = '9bb31a15c401a65ac3989ee9d32ec331' # App Secret
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = '7694770'
+SOCIAL_AUTH_VK_OAUTH2_SECRET = 'gEl95NLBRIfqV8bRCN3j'
+
+SOCIAL_AUTH_GITHUB_KEY = '7c84b0d25fc69407f206'
+SOCIAL_AUTH_GITHUB_SECRET = '2fad74cef9050fad3d00180d4ef824bfefdda5c7'
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -37,7 +56,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'social_django',
+    'sslserver',
     'homm3_creatures',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'social_core.backends.github.GithubOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+    'social_core.backends.vk.VKOAuth2',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 MIDDLEWARE = [
@@ -63,6 +91,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
