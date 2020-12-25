@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import concurrent.futures
 import queue
 import socket
 import sys
@@ -9,6 +8,8 @@ import requests
 import configparser
 import argparse
 import logging
+import bs4
+from urllib.parse import urlparse
 
 
 
@@ -20,6 +21,7 @@ class Config():
         self.timeout = int(config['Server']['Timeout'])
         self.max_conn = int(config['Server']['Max_conn'])
         self.auth_key = config['Server']['Authorization']
+        self.n = int(config['Server']['N'])
 
 
 def config_parsing():
@@ -51,6 +53,7 @@ def url_parsing(conn):
             if not chunk:
                 break
             url += chunk
+            chunk = None
         except socket.error:
             conn.close()
             break
@@ -59,27 +62,46 @@ def url_parsing(conn):
     return url.decode('utf-8')
 
 
+def site_parser(url, n):
+    words = {}
+    response = requests.get(url)
+    site = urlparse(response.url).netloc + urlparse(response.url).path
+    soup = bs4.BeautifulSoup(response.text, 'lxml')
+    raw = soup.get_text().replace('\n', ' ').split(' ')
+    for s in raw:
+        if s.isalpha():
+            if s in words:
+                words[s] += 1
+            else:
+                words[s] = 1
+    list_words = list(words.items())
+    list_words.sort(key=lambda i: -i[1])
+    top_n_words = site + ': '
+    for i in range(n):
+        top_n_words += list_words[i][0] + ':' + str(list_words[i][1]) + ', '
+    return top_n_words
+
+
 def master(sock, config, pipeline, event):
     while not event.is_set():
         sock.listen(config.max_conn)
         conn, addr = sock.accept()
-        print(f'connected: {addr}, port: {config.port}')
+        logging.info('connected: %s, port: %s', addr, config.port)
         url = url_parsing(conn)
-        print(f'GOT {url}')
+        logging.info('GOT %s FROM %s', url, conn)
         pipeline.put((url, conn))
         logging.info("Master got url: %s", url)
 
 
-def worker(pipeline, event):
+def worker(pipeline, event, n):
     while not event.is_set() or not pipeline.empty():
-        print('WORKER STARTED')
         url, conn = pipeline.get()
-        print(url)
-        response = requests.get(url)
+        answr = site_parser(url, n)
         logging.info(
             "Worker storing message: %s (size=%d)", url, pipeline.qsize()
         )
-        conn.sendall(url.encode('utf-8'))
+        logging.info("SEND %s TO %s", url, conn)
+        conn.sendall(answr.encode('utf-8'))
         conn.close()
 
 
@@ -94,7 +116,7 @@ if __name__ == '__main__':
     master = threading.Thread(target=master, args=(sock, config, pipeline, event))
     master.start()
     workers = [
-        threading.Thread(target=worker, args=(pipeline, event))
+        threading.Thread(target=worker, args=(pipeline, event, config.n))
         for _ in range(config.max_conn)
     ]
     for wrkr in workers:

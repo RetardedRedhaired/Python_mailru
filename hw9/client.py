@@ -2,14 +2,13 @@
 
 import socket
 import threading
-import concurrent.futures
 from sys import argv
 import queue
 
 
 def create_connection():
     sock = socket.socket()
-    sock.settimeout(2)
+    sock.settimeout(10)
     port = 10001
     sock.connect(('127.0.0.1', port))
     return sock
@@ -18,20 +17,21 @@ def create_connection():
 def urls_pars(addr, pipeline):
     with open(addr, 'r') as f:
         for line in f:
-            pipeline.put(line.rstrip('\n'))
+            for _ in range(100):
+                pipeline.put(line.rstrip('\n'))
 
 
 def request(pipeline):
     while not pipeline.empty():
         conn = create_connection()
         url = pipeline.get()
+        #print(f'SEND {url} TO {conn}')
         conn.sendall(url.encode('utf-8'))
         data = b''
         while True:
             try:
-                print("TEST recv error")
+                #print("TEST recv error")
                 chunk = conn.recv(1024)
-                print(chunk)
                 if not chunk:
                     break
                 data += chunk
@@ -40,9 +40,9 @@ def request(pipeline):
                 conn.close()
                 break
             if not chunk:
-                print("TEST")
+                #print("TEST")
                 break
-        #print(data.decode('utf-8'))
+        print(data.decode('utf-8'))
         conn.close()
 
 
