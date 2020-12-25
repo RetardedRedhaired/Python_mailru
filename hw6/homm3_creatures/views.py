@@ -62,7 +62,7 @@ def get_name(request):
 
 
 def is_authorized(method_to_decorate, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None):
-    def wrapper(self, request, *args):
+    def wrapper(self, request, *args, **kwargs):
         if isinstance(request.user, AnonymousUser):
             path = request.build_absolute_uri()
             resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
@@ -72,11 +72,12 @@ def is_authorized(method_to_decorate, redirect_field_name=REDIRECT_FIELD_NAME, l
                     (not login_netloc or login_netloc == current_netloc)):
                 path = request.get_full_path()
             return redirect_to_login(path, resolved_login_url, redirect_field_name)
-        return method_to_decorate(self, request, *args)
+        return method_to_decorate(self, request, *args, **kwargs)
     return wrapper
 
 
 class CreatureView(APIView):
+    @is_authorized
     def get(self, request):
         print(f'REQUEST_USER = {request.user}')
         creatures = Creature.objects.all()
