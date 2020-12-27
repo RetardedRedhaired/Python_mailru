@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 import queue
+import json
+import signal
 import socket
 import sys
 import threading
-
+import os
 import requests
 import configparser
 import argparse
 import logging
 import bs4
 from urllib.parse import urlparse
+from collections import Counter
 
 
 
@@ -63,23 +66,17 @@ def url_parsing(conn):
 
 
 def site_parser(url, n):
-    words = {}
+    words = Counter()
     response = requests.get(url)
     site = urlparse(response.url).netloc + urlparse(response.url).path
     soup = bs4.BeautifulSoup(response.text, 'lxml')
     raw = soup.get_text().replace('\n', ' ').split(' ')
     for s in raw:
         if s.isalpha():
-            if s in words:
-                words[s] += 1
-            else:
-                words[s] = 1
-    list_words = list(words.items())
-    list_words.sort(key=lambda i: -i[1])
-    top_n_words = site + ': '
-    for i in range(n):
-        top_n_words += list_words[i][0] + ':' + str(list_words[i][1]) + ', '
-    return top_n_words
+            words[s] += 1
+    top_n_words = dict(words.most_common(n))
+    top_n_words['site'] = site
+    return json.dumps(top_n_words)
 
 
 def master(sock, config, pipeline, event):
@@ -105,7 +102,14 @@ def worker(pipeline, event, n):
         conn.close()
 
 
+def sig_handler(signal_name, frame):
+    sys.exit(0)
+    sys,exit(0)
+
+
 if __name__ == '__main__':
+    signal.signal(signal.SIGUSR1, sig_handler)
+    print(os.getpid())
     config = Config(config_parsing())
     form = "%(asctime)s: %(message)s"
     logging.basicConfig(filename=config.log_path, format=form, level=logging.INFO,
