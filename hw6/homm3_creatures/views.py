@@ -13,7 +13,7 @@ from django.contrib.auth.models import AnonymousUser
 from .serializers import CreatureSerializer
 from .models import Creature
 from .forms import NameForm
-
+from .tasks import mail_to_admin
 from urllib.parse import urlparse
 
 
@@ -41,26 +41,6 @@ def home(request):
     return render(request, 'home.html', {'form': form})
 
 
-def get_name(request):
-    # if this is a POST request we need to process the form data
-    if request.method == 'POST':
-        # create a form instance and populate it with data from the request:
-        form = NameForm(request.POST)
-        # check whether it's valid:
-        if form.is_valid():
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            from django.http import HttpResponseRedirect
-            return HttpResponseRedirect('')
-
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        form = NameForm()
-
-    return render(request, 'name.html', {'form': form})
-
-
 def is_authorized(method_to_decorate, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None):
     def wrapper(self, request, *args, **kwargs):
         if isinstance(request.user, AnonymousUser):
@@ -77,19 +57,21 @@ def is_authorized(method_to_decorate, redirect_field_name=REDIRECT_FIELD_NAME, l
 
 
 class CreatureView(APIView):
-    @is_authorized
     def get(self, request):
-        print(f'REQUEST_USER = {request.user}')
         creatures = Creature.objects.all()
         serializer = CreatureSerializer(creatures, many=True)
         return Response({'creatures': serializer.data})
 
     @is_authorized
     def post(self, request):
+        usr = request.user
         creatures = request.data.get('creatures')
         serializer = CreatureSerializer(data=creatures, many=True)
         if serializer.is_valid(raise_exception=False):
             serializer.save()
+            print('TEST0')
+            mail_to_admin.delay(usr.email)
+            print('TEST')
             return Response({"success": "Creature '{}' created successfully".format(creatures[0].get('name'))})
         else:
             raise Http404("Something wrong")

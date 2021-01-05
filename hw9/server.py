@@ -13,17 +13,21 @@ import logging
 import bs4
 from urllib.parse import urlparse
 from collections import Counter
+from functools import partial
 
 
+class UrlCounter:
+    def __init__(self):
+        self.num = 0
 
-class Config():
+
+class Config:
     def __init__(self, config):
         self.port = int(config['Server']['Port'])
         self.log_path = config['Server']['Log_path']
         self.ip = config['Server']['IP']
         self.timeout = int(config['Server']['Timeout'])
         self.max_conn = int(config['Server']['Max_conn'])
-        self.auth_key = config['Server']['Authorization']
         self.n = int(config['Server']['N'])
 
 
@@ -84,31 +88,38 @@ def master(sock, config, pipeline, event):
         sock.listen(config.max_conn)
         conn, addr = sock.accept()
         logging.info('connected: %s, port: %s', addr, config.port)
-        url = url_parsing(conn)
-        logging.info('GOT %s FROM %s', url, conn)
-        pipeline.put((url, conn))
-        logging.info("Master got url: %s", url)
+        pipeline.put(conn)
+    if event.is_set():
+        print('MASTER EVENT')
+        sock.close()
 
 
-def worker(pipeline, event, n):
+def worker(pipeline, event, n, url_counter):
     while not event.is_set() or not pipeline.empty():
-        url, conn = pipeline.get()
+        conn = pipeline.get()
+        url = url_parsing(conn)
+        logging.info("Worker got url: %s", url)
         answr = site_parser(url, n)
         logging.info(
             "Worker storing message: %s (size=%d)", url, pipeline.qsize()
         )
         logging.info("SEND %s TO %s", url, conn)
         conn.sendall(answr.encode('utf-8'))
+        url_counter.num += 1
         conn.close()
+    if event.is_set():
+        print('WORKER EVENT')
 
 
-def sig_handler(signal_name, frame):
-    sys.exit(0)
-    sys,exit(0)
+def sig_handler(signal_name, frame, event, url_counter, sock):
+    event.set()
+    sock.close()
+    print(f'total urls parsed: {url_counter.num}')
+    signal.raise_signal(signal.SIGKILL)
+    sys.exit(1)
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGUSR1, sig_handler)
     print(os.getpid())
     config = Config(config_parsing())
     form = "%(asctime)s: %(message)s"
@@ -117,12 +128,15 @@ if __name__ == '__main__':
     sock = create_connection(config)
     pipeline = queue.Queue(maxsize=10)
     event = threading.Event()
+    url_counter = UrlCounter()
     master = threading.Thread(target=master, args=(sock, config, pipeline, event))
     master.start()
     workers = [
-        threading.Thread(target=worker, args=(pipeline, event, config.n))
+        threading.Thread(target=worker, args=(pipeline, event, config.n, url_counter))
         for _ in range(config.max_conn)
     ]
+    signal.signal(signal.SIGUSR1,
+                  partial(sig_handler, event=event, url_counter=url_counter, sock=sock))
     for wrkr in workers:
         wrkr.start()
     for wrkr in workers:

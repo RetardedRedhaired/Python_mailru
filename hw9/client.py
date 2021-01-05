@@ -25,22 +25,18 @@ def request(pipeline):
     while not pipeline.empty():
         conn = create_connection()
         url = pipeline.get()
-        #print(f'SEND {url} TO {conn}')
         conn.sendall(url.encode('utf-8'))
         data = b''
         while True:
             try:
-                #print("TEST recv error")
                 chunk = conn.recv(1024)
                 if not chunk:
                     break
                 data += chunk
             except socket.error:
-                print("TEST socket error")
                 conn.close()
                 break
             if not chunk:
-                #print("TEST")
                 break
         print(data.decode('utf-8'))
         conn.close()

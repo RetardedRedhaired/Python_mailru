@@ -13,6 +13,17 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 import os
 
+# Celery settings
+
+CELERY_BROKER_URL = 'redis://localhost'
+
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_RESULT_BACKEND = 'redis://localhost'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,6 +37,18 @@ SECRET_KEY = '*$5#nn2r+#p_%ae%e@0he**j4r_^)-#)ffqz8b7vo-m2pzg9jx'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+CENTRIFUGE_ADDRESS = 'http://centrifuge.example.com'
+CENTRIFUGE_TIMEOUT = 10
+CENTRIFUGE_SECRET = '305f4f60-d26c-4558-9149-f57428d35760'
+CENTRIFUGE_API_KEY = '2d2b2f54-8605-43c3-bf79-d717c58c7f19'
+
+EMAIL_HOST = 'smtp.googlemail.com'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = "fivewheeled.trike@gmail.com"
+EMAIL_HOST_PASSWORD = "MoscowBerlin20"
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
@@ -55,10 +78,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'homm3_creatures',
+    'django_celery_results',
+    'django_celery_beat',
     'rest_framework',
     'social_django',
     'sslserver',
-    'homm3_creatures',
+    'adjacent',
 ]
 
 AUTHENTICATION_BACKENDS = [
