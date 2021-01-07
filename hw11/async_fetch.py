@@ -8,15 +8,16 @@ tasks = []
 
 
 def write_to_file(data):
-    with open(f'photo_{time.time()}', 'wb') as f:
-        f.write(data)
+    f = open(f'photo_{time.time()}', 'wb')
+    f.write(data)
+    f.close()
 
 
 async def fetch(url, session):
     loop = asyncio.get_event_loop()
     async with session.get(url, allow_redirects=True) as resp:
         data = await resp.read()
-        loop.add_writer(stdout, write_to_file, data)
+        await loop.run_in_executor(None, write_to_file, data)
 
 
 async def main():
