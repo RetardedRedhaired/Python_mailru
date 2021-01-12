@@ -52,7 +52,7 @@ async def main(n, file_name):
         with open(file_name, 'r') as f:
             for line in f:
                 urls.append(line.rstrip('\n'))
-        workers = (worker(tasks, sem) for i in range(10))
+        workers = (worker(tasks, sem) for i in range(n))
         await asyncio.gather(master(urls, tasks, session), *workers)
 
 
