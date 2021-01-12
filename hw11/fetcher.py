@@ -1,4 +1,6 @@
 import asyncio
+from queue import Queue
+
 import aiohttp
 import sys
 import bs4
@@ -26,38 +28,32 @@ async def fetch(url, session):
     print('task completed')
 
 
-async def queue_manager(urls):
-    while len(urls) != 0:
-        print('TEST')
-        task = fetch(, session)
-        for task in tasks:
-            print('TASKSSSS')
-            if task.task_done():
-                print('task completed', task)
-                tasks.get(task)
+async def master(urls, tasks, session):
+    task_queue = Queue()
+    for url in urls:
+        task_queue.put(fetch(url, session))
+    while not task_queue.empty():
+        await tasks.put(task_queue.get())
 
 
-async def run_task(tasks, sem):
-    while not tasks.empty():
-        async with sem:
+async def worker(tasks, sem):
+    async with sem:
+        while not tasks.empty():
             task = await tasks.get()
-            print('TASK STARTED')
-            await asyncio.gather(task)
-
+            print(f"TASK {task} STARTED")
+            await asyncio.create_task(task)
 
 
 async def main(n, file_name):
     tasks = asyncio.Queue()
     urls = []
-    sem = asyncio.Semaphore(value=n)
+    sem = asyncio.Semaphore(value=n+1)
     async with aiohttp.ClientSession() as session:
         with open(file_name, 'r') as f:
             for line in f:
                 urls.append(line.rstrip('\n'))
-        await queue_manager(urls)
-        for url in urls:
-            await tasks.put(fetch(url, session))
-        await run_task(tasks, sem)
+        workers = (worker(tasks, sem) for i in range(10))
+        await asyncio.gather(master(urls, tasks, session), *workers)
 
 
 if __name__ == '__main__':
